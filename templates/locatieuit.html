@@ -1,0 +1,11 @@
+{% extends "layout.html" %}
+{% block content %}
+  <a class="mr-1">Uitboeken Voorraad </a><br><br>
+  <a class="mr-1">Artikelnummer = {{ artikel }} </a><br>
+  <a class="mr-1">Barcode = {{ barcode }} </a><br><br>
+  <a class="mr-1">Locatie: </a>
+  <form action="/locatieuitboeken" method="POST">
+    <input name="locatie">
+    <input type="submit">
+  </form>
+{% endblock content %}

@@ -1,0 +1,17 @@
+{% extends "layout.html" %}
+{% block content %}
+  <a class="mr-1">Barcode = {{ barcode }} </a><br>
+  {{ artikel | safe }}
+ 
+  <a class="mr-1">Barcode = {{ barcode }} </a>
+	{% for locatie in locaties %}
+        <article class="media content-section">
+          <div class="media-left">
+            <a class="mr-1">{{ locatie[1] }}:  {{ locatie[0] }}</a> 
+          </div>	
+        </article>
+    {% endfor %}
+  <form action="/locatieuit" method="post">
+          <input type="submit" value="Uit voorraad" >
+  </form>         
+{% endblock content %}

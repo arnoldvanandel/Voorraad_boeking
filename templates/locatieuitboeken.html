@@ -1,0 +1,17 @@
+{% extends "layout.html" %}
+{% block content %}
+  <a class="mr-1">Uitboeken Voorraad </a><br><br>
+  <a class="mr-1">Artikelnummer = {{ artikel }} </a><br>
+  <a class="mr-1">Barcode = {{ barcode }} </a><br>
+  <a class="mr-1">Locatie = {{ locatie }}  </a><br><br>
+  
+  <form action="/locatieuitgeboekt" method="POST">
+    <input id='testName' type='checkbox' value=1 name='Alles'>
+    <input id='testNameHidden' type='hidden' value=0 name='Alles'>Alles<br>
+    <a class="mr-1">Aantal volle dozen:</a>
+    <input name="Aantal volle dozen:"> <br>
+    <a class="mr-1">Restdoos aantal   :</a>
+    <input name="Restdoos aantal:"><br>
+    <input type="submit">
+  </form>
+{% endblock content %}
