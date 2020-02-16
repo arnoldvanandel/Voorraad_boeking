@@ -14,7 +14,7 @@ db = SQLAlchemy(app)
 SESSION_TYPE = 'redis'
 app.secret_key = "abc"
 
-#cnxn = pyodbc.connect('DRIVER={FreeTDS};SERVER=192.168.5.1;PORT=1433;DATABASE=AXDB30SP4;UID=Andelcontrol;PWD=v@n@nD3l')
+#cnxn = pyodbc.connect('DRIVER={FreeTDS};SERVER=192.168.5.1;PORT=1433;DATABASE=AXDB30SP4;UID=Andelcontrol;PWD=########')
 #cursor = cnxn.cursor()
 
 connection = mysql.connector.connect(host='192.168.178.221',
@@ -109,6 +109,7 @@ def locaties():
     session['artikel'] = gegevens[1]
     session['barcode'] = gegevens[2]
     session['locatie'] = ""
+    session['in_uit'] = ""
     return render_template('locaties.html', locaties=gegevens[0], artikel=session['artikel'], barcode=session['barcode'])
 
 @app.route("/test")
@@ -129,7 +130,11 @@ def locatieuit():
     if request.method == "GET":
         return render_template('home.html')
 
-    return render_template('locatieuit.html', artikel=session['artikel'], barcode=session['barcode'])
+    if request.form['submit_button'] == "Voorraad in":
+        session['in_uit'] = "Inboeken Voorraad"
+    elif request.form['submit_button'] == "Uit voorraad":
+        session['in_uit'] = "Uit voorraad boeken"
+    return render_template('locatieuit.html', artikel=session['artikel'], barcode=session['barcode'], in_uit=session['in_uit'])
 
 @app.route('/locatieuitboeken', methods=['GET', 'POST'])
 def locatieuitboeken():  
@@ -138,7 +143,16 @@ def locatieuitboeken():
 
     gegevens = list(dict(request.form).items())
     session['locatie'] = gegevens[0][1]
-    return render_template('locatieuitboeken.html', artikel=session['artikel'], barcode=session['barcode'], locatie=session['locatie'])
+    if session['in_uit'] == "Inboeken Voorraad":
+        checkbox = 'hidden'
+        alles = ''
+        checkbox_value = '0'
+    elif session['in_uit'] == "Uit voorraad boeken":
+        checkbox = 'checkbox'
+        alles = 'Alles'
+        checkbox_value = '1'
+    return render_template('locatieuitboeken.html', artikel=session['artikel'], barcode=session['barcode'], locatie=session['locatie'], in_uit=session['in_uit'],
+        checkbox=checkbox, alles=alles, checkbox_value=checkbox_value)
 
 @app.route('/locatieuitgeboekt', methods=['GET', 'POST'])
 def locatieuitgeboekt():  
@@ -147,7 +161,27 @@ def locatieuitgeboekt():
 
     gegevens = list(dict(request.form).items())
     datum = now.strftime("%d-%m-%Y")
-    mySql_insert_query = "INSERT INTO Voorraad_boeking (Datum, Artikelnummer, Locatie, Aantal_Volle_Dozen) VALUES ('" + datum + "', '" + session['artikel'] + "', '" + session['locatie'] + "', " + gegevens[1][1] + ")"
+    if session['in_uit'] == "Inboeken Voorraad":
+        if gegevens[1][1] == '':
+            aantal_volle_dozen = '0'
+        else:
+            aantal_volle_dozen = gegevens[1][1]
+
+        if gegevens[2][1] == '':
+            rest_doos_aantal = '0'
+        else:
+            rest_doos_aantal = gegevens[2][1]
+    elif session['in_uit'] == "Uit voorraad boeken":
+        if gegevens[1][1] == '':
+            aantal_volle_dozen = '0'
+        else:
+            aantal_volle_dozen = str(int(gegevens[1][1]) * -1)
+
+        if gegevens[2][1] == '':
+            rest_doos_aantal = '0'
+        else:
+            rest_doos_aantal = str(int(gegevens[2][1]) * -1)
+    mySql_insert_query = "INSERT INTO Voorraad_boeking (Datum, Artikelnummer, Locatie, Aantal_Volle_Dozen, Rest_Doos_Aantal, Alles) VALUES ('" + datum + "', '" + session['artikel'] + "', '" + session['locatie'] + "', " + aantal_volle_dozen + ", " + rest_doos_aantal + ", " + gegevens[0][1] + ")"
     cursor = connection.cursor()
     cursor.execute(mySql_insert_query)
     connection.commit()
@@ -156,7 +190,7 @@ def locatieuitgeboekt():
     #new_user = Voorraad_boeking(datum='10-5-2020', artikelnummer=session['artikel'], locatie=session['locatie'], Aantal_Volle_Dozen=gegevens[0][1], Rest_Doos_Aantal=gegevens[1][1], Alles=gegevens )  # Create an instance of the User class
     #db.session.add(new_user)  # Adds new User record to database
     #db.session.commit()  # Commits all changes
-    return render_template('locatieuitgeboekt.html', artikel=session['artikel'], barcode=session['barcode'], locatie=session['locatie'], Aantal_Volle_Dozen=gegevens[1][1], Rest_Doos_Aantal=gegevens[2][1], Alles=gegevens[0][1])
+    return render_template('locatieuitgeboekt.html', artikel=session['artikel'], barcode=session['barcode'], locatie=session['locatie'], Aantal_Volle_Dozen=aantal_volle_dozen, Rest_Doos_Aantal=rest_doos_aantal, Alles=gegevens[0][1], in_uit=session['in_uit'])
 
 if __name__ == '__main__':
 	app.run(debug=True, host='0.0.0.0')
